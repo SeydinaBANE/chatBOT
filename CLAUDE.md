@@ -26,7 +26,18 @@ pytest -v                              # tous les tests
 pytest tests/test_rag_service.py -v   # un seul module
 ```
 
-39 tests unitaires, tout mocké — aucun service externe requis.
+49 tests unitaires, tout mocké — aucun service externe requis.
+
+## Qualité du code
+
+```bash
+pre-commit install          # activer les hooks (une fois)
+ruff check .                # lint
+ruff format .               # format
+mypy . --ignore-missing-imports
+```
+
+La config ruff, mypy et pytest est dans `pyproject.toml`. Le CI exécute le job `lint` avant `tests`.
 
 ## Configuration
 
@@ -35,23 +46,24 @@ Tous les paramètres (LLM et RAG) sont dans `.env`, chargés via `pydantic-setti
 ## Architecture modulaire
 
 ```
-main.py                  ← composition root : câble toutes les dépendances
+main.py                  ← composition root : câble toutes les dépendances + configure logging
+pyproject.toml           ← config ruff, mypy, pytest
+.pre-commit-config.yaml  ← hooks ruff (lint + format) + mypy
 config/settings.py       ← Settings (pydantic-settings), charge .env
 core/
   llm_factory.py         ← create_llm(settings) → ChatOllama
   prompts.py             ← build_chat_prompt() et build_rag_prompt()
   chain.py               ← build_chain(llm) et build_rag_chain(llm, retriever)
 services/
-  chat_service.py        ← ChatService.poser_question(question) → str
-  rag_service.py         ← RagService : index_pdf() + build_rag_chat_service()
+  chat_service.py        ← ChatService : poser_question() + stream_question(), logging + erreurs
+  rag_service.py         ← RagService : index_pdf() + build_rag_chat_service(), logging + erreurs
 ui/
-  streamlit_app.py       ← run(chat_service, rag_service) : sidebar PDF + chat
+  streamlit_app.py       ← run(chat_service, rag_service) : st.chat_input + st.write_stream
 rag/
   loader.py              ← PDFLoader (PyPDF + RecursiveCharacterTextSplitter)
   embedder.py            ← Embedder / FastEmbedEmbeddings (local, sans API)
   vector_store.py        ← VectorStore / Chroma (persistance disque)
-tests/                   ← 39 tests unitaires (pytest, tout mocké)
-pytest.ini               ← pythonpath=. testpaths=tests
+tests/                   ← 49 tests unitaires (pytest, tout mocké)
 ```
 
 **Flux de dépendances :** `.env → settings → create_llm → build_chain → ChatService → UI`
@@ -60,10 +72,20 @@ L'UI n'importe aucune classe LangChain. `core/` n'importe rien de `services/` ou
 
 ## Chaînes LCEL
 
-- **Simple** (`core/chain.py`) : `prompt | llm | StrOutputParser()` — `.invoke({"question": "..."})`
-- **RAG** (`core/chain.py`) : `RunnablePassthrough.assign(context=...) | rag_prompt | llm | parser` — même interface `.invoke({"question": "..."})`
+- **Simple** (`core/chain.py`) : `prompt | llm | StrOutputParser()`
+- **RAG** (`core/chain.py`) : `RunnablePassthrough.assign(context=...) | rag_prompt | llm | parser`
 
-Pour activer le streaming Streamlit, remplacer `.invoke()` par `.stream()` dans `services/chat_service.py` sans toucher aux chaînes.
+Les deux chaînes s'appellent via `.invoke({"question": "..."})` ou `.stream({"question": "..."})`.
+
+## Streaming
+
+`ChatService.stream_question()` délègue à `chain.stream()` via `yield from` — c'est un générateur paresseux. L'UI utilise `st.write_stream()` pour afficher les tokens au fil de la génération. Les erreurs mid-stream sont capturées par le `try/except` autour du `yield from`.
+
+## Gestion d'erreurs et logging
+
+- Logging configuré dans `main.py` (`logging.basicConfig`, format ISO, level INFO)
+- `ChatService` et `RagService` : `logger = logging.getLogger(__name__)`, `try/except` avec `logger.error(..., exc_info=True)` puis re-raise
+- UI : `st.error()` autour des appels aux services — l'app ne plante jamais silencieusement
 
 ## Fonctionnement du RAG
 

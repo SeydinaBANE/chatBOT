@@ -6,16 +6,17 @@ Chatbot en Python avec architecture modulaire, utilisant LangChain (LCEL), le mo
 
 ## Fonctionnalités
 
-- Questions en langage naturel avec réponses en français
+- Questions en langage naturel avec réponses **streamées token-by-token**
 - Modèle LLM local via Ollama (aucune API externe)
 - Interface web Streamlit avec historique de conversation
 - **RAG opérationnel** : upload PDF → indexation ChromaDB → réponses basées sur le document
+- Gestion d'erreurs avec messages clairs (Ollama éteint, PDF corrompu…)
 - Configuration externalisée via `.env`
-- 39 tests unitaires (pytest)
+- 49 tests unitaires (pytest)
 
 ## Prérequis
 
-- Python 3.10+
+- Python 3.11+
 - [Ollama](https://ollama.com) installé et en cours d'exécution
 
 ## Installation
@@ -50,6 +51,21 @@ Le mode RAG s'active automatiquement après indexation. Les réponses sont gén�
 pytest -v
 ```
 
+## Qualité du code
+
+```bash
+# Installer les hooks (une fois)
+pip install pre-commit
+pre-commit install
+
+# Lancer manuellement
+ruff check .
+ruff format .
+mypy . --ignore-missing-imports
+```
+
+Les hooks ruff et mypy s'exécutent automatiquement à chaque `git commit`.
+
 ## Configuration
 
 Les paramètres sont dans `.env` (copié depuis `.env.example`) :
@@ -69,13 +85,14 @@ Les paramètres sont dans `.env` (copié depuis `.env.example`) :
 
 ```
 main.py                    ← point d'entrée (composition root)
-pytest.ini                 ← configuration pytest
+pyproject.toml             ← config ruff, mypy, pytest
+.pre-commit-config.yaml    ← hooks ruff + mypy
 config/settings.py         ← configuration centralisée (pydantic-settings)
 core/                      ← logique LangChain (LCEL)
 services/
-  chat_service.py          ← ChatService.poser_question()
+  chat_service.py          ← ChatService : poser_question() + stream_question()
   rag_service.py           ← RagService : indexation PDF + chaîne RAG
 ui/                        ← interface Streamlit
 rag/                       ← PDFLoader, Embedder, VectorStore (ChromaDB)
-tests/                     ← 39 tests unitaires
+tests/                     ← 49 tests unitaires
 ```
