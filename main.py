@@ -4,6 +4,8 @@ Câble toutes les dépendances et lance l'interface Streamlit.
 Lancer avec : streamlit run main.py
 """
 
+import logging
+
 from config.settings import settings
 from core.chain import build_chain
 from core.llm_factory import create_llm
@@ -13,6 +15,12 @@ from rag.vector_store import VectorStore
 from services.chat_service import ChatService
 from services.rag_service import RagService
 from ui.streamlit_app import run
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 llm = create_llm(settings)
 
