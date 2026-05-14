@@ -1,5 +1,7 @@
 # ChatBot Ollama + LangChain
 
+[![CI](https://github.com/SeydinaBANE/chatBOT/actions/workflows/ci.yml/badge.svg)](https://github.com/SeydinaBANE/chatBOT/actions/workflows/ci.yml)
+
 Chatbot en Python avec architecture modulaire, utilisant LangChain (LCEL), le modèle LLaMA via Ollama, et une interface Streamlit.
 
 ## Fonctionnalités
