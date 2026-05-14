@@ -1,3 +1,9 @@
+"""Point d'entrée de l'application — composition root.
+
+Câble toutes les dépendances et lance l'interface Streamlit.
+Lancer avec : streamlit run main.py
+"""
+
 from config.settings import settings
 from core.chain import build_chain
 from core.llm_factory import create_llm

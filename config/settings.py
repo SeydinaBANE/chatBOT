@@ -1,7 +1,11 @@
+"""Configuration centralisée chargée depuis les variables d'environnement (.env)."""
+
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    """Paramètres de l'application, surchargeables via .env."""
+
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "tinyllama"
     ollama_temperature: float = 0.7

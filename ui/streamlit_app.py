@@ -1,9 +1,16 @@
+"""Interface utilisateur Streamlit du chatbot."""
+
 import streamlit as st
 
 from services.chat_service import ChatService
 
 
 def run(chat_service: ChatService) -> None:
+    """Lance l'interface Streamlit et gère la boucle question/réponse.
+
+    Args:
+        chat_service: Service injecté qui traite les questions.
+    """
     st.title("Chatbot avec Ollama et LangChain")
 
     if "history" not in st.session_state:
