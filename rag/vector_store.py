@@ -2,13 +2,14 @@
 
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
+from langchain_core.embeddings import Embeddings
 from langchain_core.vectorstores import VectorStoreRetriever
 
 
 class VectorStore:
     """Encapsule ChromaDB avec persistance disque et expose un retriever LangChain."""
 
-    def __init__(self, persist_dir: str, embeddings: object) -> None:
+    def __init__(self, persist_dir: str, embeddings: Embeddings) -> None:
         """
         Args:
             persist_dir: Répertoire de persistance ChromaDB.
