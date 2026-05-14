@@ -7,10 +7,10 @@ from services.rag_service import RagService
 
 
 def run(chat_service: ChatService, rag_service: RagService) -> None:
-    """Lance l'interface Streamlit avec support optionnel du RAG.
+    """Lance l'interface Streamlit avec streaming et support optionnel du RAG.
 
-    La sidebar permet d'uploader un PDF. Une fois indexé, toutes les réponses
-    sont générées à partir du contenu du document.
+    Les réponses sont affichées token-by-token via st.write_stream().
+    La sidebar permet d'uploader un PDF pour activer le mode RAG.
 
     Args:
         chat_service: Service de chat simple (sans contexte documentaire).
@@ -44,17 +44,20 @@ def run(chat_service: ChatService, rag_service: RagService) -> None:
         else:
             st.caption("Aucun document indexé. Le chatbot répond librement.")
 
-    # --- Chat ---
-    question = st.text_input("Pose ta question")
-
-    if st.button("Envoyer") and question.strip():
-        with st.spinner("Génération de la réponse..."):
-            reponse = st.session_state.chat_service.poser_question(question)
-        st.session_state.history.append(("Vous", question))
-        st.session_state.history.append(("Bot", reponse))
-
+    # --- Historique ---
     for auteur, msg in st.session_state.history:
-        if auteur == "Vous":
-            st.markdown(f"**🧑 Vous :** {msg}")
-        else:
-            st.markdown(f"**🤖 Bot :** {msg}")
+        role = "user" if auteur == "Vous" else "assistant"
+        with st.chat_message(role):
+            st.markdown(msg)
+
+    # --- Saisie et streaming ---
+    if question := st.chat_input("Pose ta question"):
+        st.session_state.history.append(("Vous", question))
+        with st.chat_message("user"):
+            st.markdown(question)
+
+        with st.chat_message("assistant"):
+            reponse = st.write_stream(
+                st.session_state.chat_service.stream_question(question)
+            )
+        st.session_state.history.append(("Bot", reponse))
