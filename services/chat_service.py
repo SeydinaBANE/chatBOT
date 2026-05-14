@@ -1,7 +1,7 @@
 """Service métier du chatbot — point d'entrée unique pour l'UI."""
 
 import logging
-from typing import Iterator
+from collections.abc import Iterator
 
 from langchain_core.runnables import Runnable
 

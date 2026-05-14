@@ -1,9 +1,9 @@
 """Tests du service RAG."""
 
 import logging
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import MagicMock, patch
 
 from services.chat_service import ChatService
 from services.rag_service import RagService

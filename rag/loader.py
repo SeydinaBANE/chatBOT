@@ -2,7 +2,6 @@
 
 import tempfile
 from pathlib import Path
-from typing import List
 
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
@@ -23,7 +22,7 @@ class PDFLoader:
             chunk_overlap=chunk_overlap,
         )
 
-    def load(self, path: Path) -> List[Document]:
+    def load(self, path: Path) -> list[Document]:
         """Charge un fichier PDF depuis le disque et retourne les chunks.
 
         Args:
@@ -36,7 +35,7 @@ class PDFLoader:
         pages = loader.load()
         return self._splitter.split_documents(pages)
 
-    def load_from_bytes(self, data: bytes, filename: str) -> List[Document]:
+    def load_from_bytes(self, data: bytes, filename: str) -> list[Document]:
         """Charge un PDF depuis des bytes (upload Streamlit) et retourne les chunks.
 
         Args:

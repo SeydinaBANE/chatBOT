@@ -1,6 +1,5 @@
 """Tests de la configuration centralisée."""
 
-import pytest
 from config.settings import Settings
 
 

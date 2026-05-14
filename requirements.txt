@@ -9,3 +9,6 @@ pypdf
 fastembed
 python-dotenv
 pytest
+pre-commit
+ruff
+mypy
