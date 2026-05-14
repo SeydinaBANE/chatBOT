@@ -78,7 +78,7 @@ def test_stream_question_propagates_exception(mock_chain):
 def test_stream_question_logs_error(mock_chain, caplog):
     def _failing_stream(*args, **kwargs):
         raise RuntimeError("erreur stream")
-        yield  # noqa: unreachable — rend la fonction générateur
+        yield  # noqa: RET505 — rend la fonction générateur
 
     mock_chain.stream.side_effect = _failing_stream
     service = ChatService(mock_chain)

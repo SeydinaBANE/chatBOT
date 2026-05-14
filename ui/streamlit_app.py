@@ -62,9 +62,7 @@ def run(chat_service: ChatService, rag_service: RagService) -> None:
 
         try:
             with st.chat_message("assistant"):
-                reponse = st.write_stream(
-                    st.session_state.chat_service.stream_question(question)
-                )
+                reponse = st.write_stream(st.session_state.chat_service.stream_question(question))
             st.session_state.history.append(("Bot", reponse))
         except Exception as e:
             st.error(f"❌ Erreur : {e}. Vérifiez qu'Ollama est démarré (`ollama serve`).")

@@ -23,6 +23,7 @@ def test_create_llm_passes_correct_params():
 
 def test_create_llm_returns_ollama_instance():
     from unittest.mock import MagicMock
+
     s = Settings()
     with patch("core.llm_factory.ChatOllama") as MockChatOllama:
         mock_instance = MagicMock()

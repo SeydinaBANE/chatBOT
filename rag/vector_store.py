@@ -1,7 +1,5 @@
 """Gestion du vector store ChromaDB persistant."""
 
-from typing import List
-
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
 from langchain_core.vectorstores import VectorStoreRetriever
@@ -21,7 +19,7 @@ class VectorStore:
             embedding_function=embeddings,
         )
 
-    def add_documents(self, documents: List[Document]) -> None:
+    def add_documents(self, documents: list[Document]) -> None:
         """Indexe une liste de documents dans le vector store.
 
         Args:

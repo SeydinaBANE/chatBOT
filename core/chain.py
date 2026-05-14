@@ -33,9 +33,7 @@ def build_rag_chain(llm: ChatOllama, retriever: VectorStoreRetriever) -> Runnabl
     Returns:
         Runnable acceptant {"question": str} et retournant la réponse str.
     """
-    format_docs = RunnableLambda(
-        lambda docs: "\n\n".join(d.page_content for d in docs)
-    )
+    format_docs = RunnableLambda(lambda docs: "\n\n".join(d.page_content for d in docs))
 
     return (
         RunnablePassthrough.assign(
