@@ -4,20 +4,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Prérequis
 
-Ollama doit tourner en local avec le modèle souhaité :
-
-```bash
-ollama pull tinyllama
-ollama serve   # si le service ne tourne pas déjà
-```
+Docker ou Python 3.11+ avec Ollama en local.
 
 ## Lancer l'application
+
+**Via Docker (recommandé) :**
+
+```bash
+cp .env.example .env
+make docker-up      # build + démarre Ollama + app
+make docker-pull    # télécharge tinyllama dans le conteneur Ollama
+```
+
+**En local :**
 
 ```bash
 cp .env.example .env
 pip install -r requirements.txt
+ollama pull tinyllama
 streamlit run main.py
 ```
+
+## Docker
+
+- `Dockerfile` — image `python:3.11-slim`, expose le port 8501
+- `docker-compose.yml` — deux services : `ollama` + `app`
+- L'env var `OLLAMA_BASE_URL=http://ollama:11434` dans `docker-compose.yml` écrase celle du `.env` pour que `app` parle au service `ollama` par son nom DNS interne
+- Deux volumes nommés : `ollama_data` (modèles) et `chroma_data` (index RAG)
 
 ## Tests
 

@@ -1,4 +1,4 @@
-.PHONY: install setup run test lint format typecheck check
+.PHONY: install setup run test lint format typecheck check docker-up docker-down docker-pull
 
 install:
 	pip install -r requirements.txt
@@ -23,3 +23,12 @@ typecheck:
 
 check: lint typecheck
 	ruff format --check .
+
+docker-pull:
+	docker compose run --rm ollama ollama pull tinyllama
+
+docker-up:
+	docker compose up --build -d
+
+docker-down:
+	docker compose down

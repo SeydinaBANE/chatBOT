@@ -16,10 +16,29 @@ Chatbot en Python avec architecture modulaire, utilisant LangChain (LCEL), le mo
 
 ## Prérequis
 
-- Python 3.11+
-- [Ollama](https://ollama.com) installé et en cours d'exécution
+- Python 3.11+ **ou** Docker + Docker Compose
+- [Ollama](https://ollama.com) (uniquement en mode local)
 
-## Installation
+## Démarrage rapide — Docker (recommandé)
+
+```bash
+git clone https://github.com/SeydinaBANE/chatBOT.git
+cd chatBOT
+
+cp .env.example .env
+make docker-up        # build + démarre Ollama et l'app
+make docker-pull      # télécharge le modèle tinyllama dans Ollama
+```
+
+L'interface est disponible sur [http://localhost:8501](http://localhost:8501).
+
+```bash
+make docker-down      # arrêter les conteneurs
+```
+
+Les données (modèles Ollama, index ChromaDB) sont persistées dans des volumes Docker nommés.
+
+## Installation locale (sans Docker)
 
 ```bash
 git clone https://github.com/SeydinaBANE/chatBOT.git
@@ -30,7 +49,7 @@ pip install -r requirements.txt
 ollama pull tinyllama
 ```
 
-## Utilisation
+## Utilisation locale
 
 ```bash
 streamlit run main.py
