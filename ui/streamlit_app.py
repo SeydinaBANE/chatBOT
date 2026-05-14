@@ -11,6 +11,7 @@ def run(chat_service: ChatService, rag_service: RagService) -> None:
 
     Les réponses sont affichées token-by-token via st.write_stream().
     La sidebar permet d'uploader un PDF pour activer le mode RAG.
+    Les erreurs LLM et RAG sont affichées à l'utilisateur sans planter l'app.
 
     Args:
         chat_service: Service de chat simple (sans contexte documentaire).
@@ -32,12 +33,15 @@ def run(chat_service: ChatService, rag_service: RagService) -> None:
 
         if uploaded:
             if st.button("Indexer le document"):
-                with st.spinner("Indexation en cours..."):
-                    n_chunks = rag_service.index_pdf(uploaded.read(), uploaded.name)
-                    st.session_state.chat_service = rag_service.build_rag_chat_service()
-                    st.session_state.rag_active = True
-                    st.session_state.history = []
-                st.success(f"✅ {uploaded.name} indexé ({n_chunks} chunks).")
+                try:
+                    with st.spinner("Indexation en cours..."):
+                        n_chunks = rag_service.index_pdf(uploaded.read(), uploaded.name)
+                        st.session_state.chat_service = rag_service.build_rag_chat_service()
+                        st.session_state.rag_active = True
+                        st.session_state.history = []
+                    st.success(f"✅ {uploaded.name} indexé ({n_chunks} chunks).")
+                except Exception as e:
+                    st.error(f"❌ Erreur lors de l'indexation : {e}")
 
         if st.session_state.rag_active:
             st.info("Mode RAG actif — les réponses sont basées sur le document.")
@@ -56,8 +60,11 @@ def run(chat_service: ChatService, rag_service: RagService) -> None:
         with st.chat_message("user"):
             st.markdown(question)
 
-        with st.chat_message("assistant"):
-            reponse = st.write_stream(
-                st.session_state.chat_service.stream_question(question)
-            )
-        st.session_state.history.append(("Bot", reponse))
+        try:
+            with st.chat_message("assistant"):
+                reponse = st.write_stream(
+                    st.session_state.chat_service.stream_question(question)
+                )
+            st.session_state.history.append(("Bot", reponse))
+        except Exception as e:
+            st.error(f"❌ Erreur : {e}. Vérifiez qu'Ollama est démarré (`ollama serve`).")

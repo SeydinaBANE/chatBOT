@@ -1,5 +1,8 @@
 """Tests du service RAG."""
 
+import logging
+
+import pytest
 from unittest.mock import MagicMock, patch
 
 from services.chat_service import ChatService
@@ -30,6 +33,30 @@ def test_index_pdf_adds_documents_to_vector_store():
     service, loader, vector_store = _make_service(n_docs=2)
     service.index_pdf(b"data", "doc.pdf")
     vector_store.add_documents.assert_called_once_with(loader.load_from_bytes.return_value)
+
+
+def test_index_pdf_propagates_exception():
+    service, loader, _ = _make_service()
+    loader.load_from_bytes.side_effect = ValueError("PDF corrompu")
+    with pytest.raises(ValueError, match="PDF corrompu"):
+        service.index_pdf(b"bad data", "corrupt.pdf")
+
+
+def test_index_pdf_logs_start_and_success(caplog):
+    service, _, _ = _make_service(n_docs=2)
+    with caplog.at_level(logging.INFO, logger="services.rag_service"):
+        service.index_pdf(b"data", "rapport.pdf")
+    assert "rapport.pdf" in caplog.text
+    assert "2 chunks" in caplog.text
+
+
+def test_index_pdf_logs_error(caplog):
+    service, loader, _ = _make_service()
+    loader.load_from_bytes.side_effect = RuntimeError("échec parsing")
+    with caplog.at_level(logging.ERROR, logger="services.rag_service"):
+        with pytest.raises(RuntimeError):
+            service.index_pdf(b"data", "doc.pdf")
+    assert "échec parsing" in caplog.text
 
 
 def test_has_documents_delegates_to_vector_store():

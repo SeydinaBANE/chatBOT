@@ -1,11 +1,15 @@
 """Service d'indexation PDF et de construction de la chaîne RAG."""
 
+import logging
+
 from langchain_community.chat_models import ChatOllama
 
 from core.chain import build_rag_chain
 from rag.loader import PDFLoader
 from rag.vector_store import VectorStore
 from services.chat_service import ChatService
+
+logger = logging.getLogger(__name__)
 
 
 class RagService:
@@ -36,10 +40,19 @@ class RagService:
 
         Returns:
             Nombre de chunks indexés.
+
+        Raises:
+            Exception: Propage toute erreur de chargement ou d'indexation.
         """
-        documents = self._loader.load_from_bytes(data, filename)
-        self._vector_store.add_documents(documents)
-        return len(documents)
+        logger.info("Indexation de '%s' (%d octets)", filename, len(data))
+        try:
+            documents = self._loader.load_from_bytes(data, filename)
+            self._vector_store.add_documents(documents)
+            logger.info("'%s' indexé avec succès : %d chunks", filename, len(documents))
+            return len(documents)
+        except Exception as e:
+            logger.error("Erreur lors de l'indexation de '%s' : %s", filename, e, exc_info=True)
+            raise
 
     def build_rag_chat_service(self) -> ChatService:
         """Construit un ChatService utilisant la chaîne RAG avec le retriever actuel.
