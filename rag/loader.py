@@ -1,24 +1,55 @@
-"""Chargement de documents PDF pour le pipeline RAG (scaffold)."""
+"""Chargement et découpage de documents PDF pour le pipeline RAG."""
 
+import tempfile
 from pathlib import Path
 from typing import List
 
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 class PDFLoader:
-    """Charge et découpe des fichiers PDF en documents LangChain."""
+    """Charge un PDF depuis le disque ou des bytes et le découpe en chunks."""
+
+    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200) -> None:
+        """
+        Args:
+            chunk_size: Taille maximale de chaque chunk en caractères.
+            chunk_overlap: Chevauchement entre chunks consécutifs.
+        """
+        self._splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+        )
 
     def load(self, path: Path) -> List[Document]:
-        """Charge un fichier PDF et retourne une liste de documents.
+        """Charge un fichier PDF depuis le disque et retourne les chunks.
 
         Args:
-            path: Chemin vers le fichier PDF à charger.
+            path: Chemin vers le fichier PDF.
 
         Returns:
-            Liste de Document LangChain (un par page ou par chunk).
-
-        Raises:
-            NotImplementedError: Jusqu'à l'implémentation complète du RAG.
+            Liste de Document LangChain découpés en chunks.
         """
-        raise NotImplementedError("RAG — chargement PDF non encore implémenté")
+        loader = PyPDFLoader(str(path))
+        pages = loader.load()
+        return self._splitter.split_documents(pages)
+
+    def load_from_bytes(self, data: bytes, filename: str) -> List[Document]:
+        """Charge un PDF depuis des bytes (upload Streamlit) et retourne les chunks.
+
+        Args:
+            data: Contenu binaire du fichier PDF.
+            filename: Nom du fichier (utilisé pour les métadonnées).
+
+        Returns:
+            Liste de Document LangChain découpés en chunks.
+        """
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp.write(data)
+            tmp_path = Path(tmp.name)
+        try:
+            return self.load(tmp_path)
+        finally:
+            tmp_path.unlink(missing_ok=True)

@@ -1,10 +1,10 @@
-"""Génération d'embeddings pour le pipeline RAG (scaffold)."""
+"""Génération d'embeddings vectoriels via FastEmbed."""
 
 from langchain_community.embeddings import FastEmbedEmbeddings
 
 
 class Embedder:
-    """Fournit un modèle d'embeddings via FastEmbed."""
+    """Fournit un modèle d'embeddings léger via FastEmbed (aucune API externe)."""
 
     def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5") -> None:
         """
@@ -14,12 +14,9 @@ class Embedder:
         self._model_name = model_name
 
     def get_embeddings(self) -> FastEmbedEmbeddings:
-        """Retourne une instance FastEmbedEmbeddings configurée.
+        """Instancie et retourne le modèle d'embeddings configuré.
 
         Returns:
-            Instance prête à être passée au vector store.
-
-        Raises:
-            NotImplementedError: Jusqu'à l'implémentation complète du RAG.
+            Instance FastEmbedEmbeddings prête à être passée au vector store.
         """
-        raise NotImplementedError("RAG — embeddings non encore implémentés")
+        return FastEmbedEmbeddings(model_name=self._model_name)
