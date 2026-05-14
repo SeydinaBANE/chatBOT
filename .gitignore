@@ -1,0 +1,26 @@
+# Environnement Python
+.env
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ChromaDB (données locales RAG)
+chroma_db/
+
+# Streamlit
+.streamlit/
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
