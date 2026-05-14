@@ -1,6 +1,8 @@
 streamlit
 langchain
 langchain-community
+langchain-core
+pydantic-settings
 chromadb
 pypdf
 fastembed
