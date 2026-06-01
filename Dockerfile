@@ -13,8 +13,8 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 app && \
     adduser --system --uid 1001 --ingroup app --no-create-home app
 
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+COPY --from=builder --chown=app:app /root/.local /home/app/.local
+ENV PATH=/home/app/.local/bin:$PATH
 
 COPY --chown=app:app . .
 
