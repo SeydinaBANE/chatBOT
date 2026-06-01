@@ -66,7 +66,7 @@ Config dans `pyproject.toml`. Le CI exécute `lint` → `tests` → `security` �
   1. `lint` — ruff + mypy
   2. `tests` — pytest avec couverture
   3. `security` — bandit + safety
-  4. `build-and-push` — build Docker, scan Trivy (CRITICAL/HIGH → exit 1), push latest ou tag semver
+  4. `build-and-push` — build Docker, scan Trivy (CRITICAL/HIGH, non-bloquant), push latest ou tag semver
 - `.github/dependabot.yml` — mises à jour hebdomadaires pip, docker, github-actions
 
 ## Configuration
@@ -116,6 +116,7 @@ Les deux chaînes s'appellent via `.invoke({"question": "..."})` ou `.stream({"q
 - Logging configuré dans `main.py` (`logging.basicConfig`, format ISO, level configurable via `LOG_LEVEL`)
 - `ChatService` et `RagService` : `logger = logging.getLogger(__name__)`, `try/except` avec `logger.error(..., exc_info=True)` puis re-raise
 - UI : `st.error()` autour des appels aux services — l'app ne plante jamais silencieusement
+- `main.py` capture SIGTERM pour un arrêt gracieux
 
 ## Fonctionnement du RAG
 
