@@ -90,8 +90,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Construire le tag en minuscules
+        run: |
+          echo "IMAGE_TAG=ghcr.io/${{ github.repository_owner }}/chatbot:${{ github.sha }}" | tr '[:upper:]' '[:lower:]' >> $GITHUB_ENV
+          echo "LATEST_TAG=ghcr.io/${{ github.repository_owner }}/chatbot:latest" | tr '[:upper:]' '[:lower:]' >> $GITHUB_ENV
+          echo "SEMVER_TAG=ghcr.io/${{ github.repository_owner }}/chatbot:${{ github.ref_name }}" | tr '[:upper:]' '[:lower:]' >> $GITHUB_ENV
+
       - name: Build l'image Docker
-        run: docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+        run: docker build -t ${{ env.IMAGE_TAG }} .
 
       - name: Installer Trivy
         uses: aquasecurity/setup-trivy@v0.2.6
@@ -99,7 +105,7 @@ jobs:
       - name: Scanner l'image avec Trivy
         run: |
           trivy image --severity CRITICAL,HIGH --exit-code 1 \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_TAG }}
 
       - name: Connexion à ghcr.io
         if: github.event_name != 'pull_request'
@@ -112,14 +118,11 @@ jobs:
       - name: Push tag latest
         if: github.ref == 'refs/heads/main'
         run: |
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-                     ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker tag ${{ env.IMAGE_TAG }} ${{ env.LATEST_TAG }}
+          docker push ${{ env.LATEST_TAG }}
 
       - name: Push tag semver
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-                     ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$VERSION
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$VERSION
+          docker tag ${{ env.IMAGE_TAG }} ${{ env.SEMVER_TAG }}
+          docker push ${{ env.SEMVER_TAG }}
