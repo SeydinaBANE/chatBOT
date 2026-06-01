@@ -7,7 +7,7 @@ pydantic-settings==2.6.1
 chromadb==1.1.1
 pypdf==5.8.0
 fastembed==0.4.2
-python-dotenv==1.1.0
+python-dotenv==1.2.2
 
 # Dev / QA
 pytest==8.3.4
