@@ -93,12 +93,13 @@ jobs:
       - name: Build l'image Docker
         run: docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
 
+      - name: Installer Trivy
+        uses: aquasecurity/setup-trivy@v0.2.6
+
       - name: Scanner l'image avec Trivy
-        uses: aquasecurity/trivy-action@v0.30.0
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          severity: CRITICAL,HIGH
-          exit-code: 1
+        run: |
+          trivy image --severity CRITICAL,HIGH --exit-code 1 \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Connexion à ghcr.io
         if: github.event_name != 'pull_request'
