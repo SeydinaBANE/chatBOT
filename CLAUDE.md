@@ -27,16 +27,18 @@ streamlit run main.py
 
 ## Docker
 
-- `Dockerfile` — image `python:3.11-slim`, expose le port 8501
-- `docker-compose.yml` — deux services : `ollama` + `app`
+- `Dockerfile` — multi-stage build, utilisateur non-root, labels OCI
+- `docker-compose.yml` — deux services : `ollama` + `app`, resource limits, read-only rootfs
 - L'env var `OLLAMA_BASE_URL=http://ollama:11434` dans `docker-compose.yml` écrase celle du `.env` pour que `app` parle au service `ollama` par son nom DNS interne
 - Deux volumes nommés : `ollama_data` (modèles) et `chroma_data` (index RAG)
+- L'image est publiée sur `ghcr.io/seydinabane/chatbot`
 
 ## Tests
 
 ```bash
-pytest -v                              # tous les tests
-pytest tests/test_rag_service.py -v   # un seul module
+make test                          # pytest -v
+make coverage                      # pytest --cov --cov-report=term-missing
+pytest tests/test_rag_service.py   # un seul module
 ```
 
 49 tests unitaires, tout mocké — aucun service externe requis.
@@ -44,13 +46,28 @@ pytest tests/test_rag_service.py -v   # un seul module
 ## Qualité du code
 
 ```bash
-pre-commit install          # activer les hooks (une fois)
-ruff check .                # lint
-ruff format .               # format
-mypy . --ignore-missing-imports
+make setup           # activer les hooks pre-commit
+make check           # ruff lint + ruff format --check + mypy
+make security        # bandit + safety + pip-audit
+make all             # check + test + coverage + security
 ```
 
-La config ruff, mypy et pytest est dans `pyproject.toml`. Le CI exécute le job `lint` avant `tests`.
+Config dans `pyproject.toml`. Le CI exécute `lint` → `tests` → `security` → `build-and-push`.
+
+## Versioning
+
+- La version est dans `VERSION` (sémantique).
+- Le CHANGELOG suit le format Keep a Changelog.
+- Un tag `v*` sur git déclenche le push d'un tag semver sur ghcr.io.
+
+## CI / CD
+
+- `.github/workflows/ci.yml` :
+  1. `lint` — ruff + mypy
+  2. `tests` — pytest avec couverture
+  3. `security` — bandit + safety
+  4. `build-and-push` — build Docker, scan Trivy (CRITICAL/HIGH → exit 1), push latest ou tag semver
+- `.github/dependabot.yml` — mises à jour hebdomadaires pip, docker, github-actions
 
 ## Configuration
 
@@ -59,9 +76,9 @@ Tous les paramètres (LLM et RAG) sont dans `.env`, chargés via `pydantic-setti
 ## Architecture modulaire
 
 ```
-main.py                  ← composition root : câble toutes les dépendances + configure logging
-pyproject.toml           ← config ruff, mypy, pytest
-.pre-commit-config.yaml  ← hooks ruff (lint + format) + mypy
+main.py                  ← composition root : câble toutes les dépendances + configure logging + signal handlers
+pyproject.toml           ← config ruff, mypy, pytest, coverage
+.pre-commit-config.yaml  ← hooks ruff (lint + format) + mypy + bandit + génériques
 config/settings.py       ← Settings (pydantic-settings), charge .env
 core/
   llm_factory.py         ← create_llm(settings) → ChatOllama
@@ -96,7 +113,7 @@ Les deux chaînes s'appellent via `.invoke({"question": "..."})` ou `.stream({"q
 
 ## Gestion d'erreurs et logging
 
-- Logging configuré dans `main.py` (`logging.basicConfig`, format ISO, level INFO)
+- Logging configuré dans `main.py` (`logging.basicConfig`, format ISO, level configurable via `LOG_LEVEL`)
 - `ChatService` et `RagService` : `logger = logging.getLogger(__name__)`, `try/except` avec `logger.error(..., exc_info=True)` puis re-raise
 - UI : `st.error()` autour des appels aux services — l'app ne plante jamais silencieusement
 

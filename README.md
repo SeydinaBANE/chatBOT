@@ -1,6 +1,8 @@
 # ChatBot Ollama + LangChain
 
 [![CI](https://github.com/SeydinaBANE/chatBOT/actions/workflows/ci.yml/badge.svg)](https://github.com/SeydinaBANE/chatBOT/actions/workflows/ci.yml)
+[![ghcr.io](https://ghcr-badge.deta.dev/seydinabane/chatbot/latest_tag?trim=major&label=image)](https://ghcr.io/seydinabane/chatbot)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Chatbot en Python avec architecture modulaire, utilisant LangChain (LCEL), le modèle LLaMA via Ollama, et une interface Streamlit.
 
@@ -64,26 +66,52 @@ streamlit run main.py
 
 Le mode RAG s'active automatiquement après indexation. Les réponses sont générées uniquement à partir du contenu du PDF. Un rechargement de l'app restaure le mode RAG si des documents ont déjà été indexés (persistance ChromaDB).
 
+## Déploiement avec Docker
+
+### Image pré-buildée (ghcr.io)
+
+```bash
+docker pull ghcr.io/seydinabane/chatbot:latest
+
+# Créer un réseau pour que l'app puisse joindre Ollama
+docker network create chatbot-net
+
+# Lancer Ollama
+docker run -d --name ollama --network chatbot-net -v ollama_data:/root/.ollama ollama/ollama
+docker exec ollama ollama pull tinyllama
+
+# Lancer l'application
+docker run -d --name chatbot --network chatbot-net -p 8501:8501 \
+  -e OLLAMA_BASE_URL=http://ollama:11434 \
+  -v chroma_data:/app/chroma_db \
+  ghcr.io/seydinabane/chatbot:latest
+```
+
+### Avec Docker Compose (production)
+
+```bash
+cp .env.example .env
+# Éditer .env si nécessaire
+make docker-up
+```
+
 ## Tests
 
 ```bash
-pytest -v
+pytest -v                           # tous les tests
+pytest --cov --cov-report=term      # avec couverture
 ```
 
 ## Qualité du code
 
 ```bash
-# Installer les hooks (une fois)
-pip install pre-commit
-pre-commit install
-
-# Lancer manuellement
-ruff check .
-ruff format .
-mypy . --ignore-missing-imports
+make setup          # installer les pre-commit hooks (une fois)
+make check          # lint + typecheck + format
+make security       # bandit + safety + pip-audit
+make all            # toutes les vérifications
 ```
 
-Les hooks ruff et mypy s'exécutent automatiquement à chaque `git commit`.
+Les hooks pre-commit s'exécutent automatiquement à chaque `git commit` : ruff, mypy, trailing-whitespace, end-of-file-fixer, bandit, etc.
 
 ## Configuration
 
@@ -99,13 +127,17 @@ Les paramètres sont dans `.env` (copié depuis `.env.example`) :
 | `RAG_CHUNK_SIZE` | `1000` | Taille des chunks PDF (caractères) |
 | `RAG_CHUNK_OVERLAP` | `200` | Chevauchement entre chunks |
 | `RAG_RETRIEVER_K` | `4` | Nombre de chunks retournés par requête |
+| `LOG_LEVEL` | `INFO` | Niveau de log (DEBUG, INFO, WARNING, ERROR) |
+| `STREAMLIT_SERVER_COOKIE_SECRET` | — | Secret pour les cookies Streamlit |
 
 ## Structure du projet
 
 ```
 main.py                    ← point d'entrée (composition root)
-pyproject.toml             ← config ruff, mypy, pytest
-.pre-commit-config.yaml    ← hooks ruff + mypy
+pyproject.toml             ← config ruff, mypy, pytest, coverage
+.pre-commit-config.yaml    ← hooks ruff + mypy + bandit + pré-commit-hooks
+VERSION                    ← version sémantique courante
+CHANGELOG.md               ← historique des modifications
 config/settings.py         ← configuration centralisée (pydantic-settings)
 core/                      ← logique LangChain (LCEL)
 services/
@@ -114,4 +146,7 @@ services/
 ui/                        ← interface Streamlit
 rag/                       ← PDFLoader, Embedder, VectorStore (ChromaDB)
 tests/                     ← 49 tests unitaires
+.github/
+  workflows/ci.yml         ← CI : lint → tests → security → build & push ghcr.io
+  dependabot.yml           ← mises à jour automatiques des dépendances
 ```

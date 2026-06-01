@@ -1,6 +1,9 @@
 """Assemblage des chaînes LCEL (simple et RAG)."""
 
+from typing import Any
+
 from langchain_community.chat_models import ChatOllama
+from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough
 from langchain_core.vectorstores import VectorStoreRetriever
@@ -33,11 +36,18 @@ def build_rag_chain(llm: ChatOllama, retriever: VectorStoreRetriever) -> Runnabl
     Returns:
         Runnable acceptant {"question": str} et retournant la réponse str.
     """
-    format_docs = RunnableLambda(lambda docs: "\n\n".join(d.page_content for d in docs))
+
+    def _format_docs(docs: list[Document]) -> str:
+        return "\n\n".join(d.page_content for d in docs)
+
+    format_docs = RunnableLambda[list[Document], str](_format_docs)
+
+    def _extract_question(x: dict[str, Any]) -> str:
+        return x["question"]
 
     return (
         RunnablePassthrough.assign(
-            context=RunnableLambda(lambda x: x["question"]) | retriever | format_docs
+            context=RunnableLambda[dict[str, Any], str](_extract_question) | retriever | format_docs
         )
         | build_rag_prompt()
         | llm

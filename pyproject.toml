@@ -1,10 +1,24 @@
+[project]
+name = "chatbot"
+version = "0.1.0"
+description = "Chatbot RAG avec Ollama, LangChain et Streamlit"
+authors = [{ name = "Seydina BANE", email = "seydinabane@users.noreply.github.com" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP"]   # pycodestyle, pyflakes, isort, pyupgrade
-ignore = ["E501"]                 # longueur de ligne gérée par ruff-format
+select = ["E", "F", "I", "UP"]
+ignore = ["E501"]
 
 [tool.mypy]
 python_version = "3.11"
@@ -14,3 +28,10 @@ strict = false
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["config", "core", "services", "rag", "ui"]
+omit = ["tests/*", "ui/streamlit_app.py"]
+
+[tool.coverage.report]
+fail_under = 70

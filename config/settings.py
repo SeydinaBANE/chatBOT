@@ -1,10 +1,15 @@
 """Configuration centralisée chargée depuis les variables d'environnement (.env)."""
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Paramètres de l'application, surchargeables via .env."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
     # LLM
     ollama_base_url: str = "http://localhost:11434"
@@ -18,9 +23,8 @@ class Settings(BaseSettings):
     rag_chunk_overlap: int = 200
     rag_retriever_k: int = 4
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    # Production
+    log_level: str = "INFO"
 
 
 settings = Settings()

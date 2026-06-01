@@ -7,9 +7,15 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: "8G"
 
   app:
     build: .
+    image: ghcr.io/seydinabane/chatbot:latest
     container_name: chatbot-app
     ports:
       - "8501:8501"
@@ -18,9 +24,17 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434
     volumes:
       - chroma_data:/app/chroma_db
+      - /tmp:/tmp
     depends_on:
-      - ollama
+      ollama:
+        condition: service_started
     restart: unless-stopped
+    read_only: true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "2G"
 
 volumes:
   ollama_data:
