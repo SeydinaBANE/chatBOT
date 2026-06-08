@@ -103,7 +103,7 @@ jobs:
         run: docker build -t ${{ env.IMAGE_TAG }} .
 
       - name: Installer Trivy
-        uses: aquasecurity/setup-trivy@v0.2.6
+        uses: aquasecurity/setup-trivy@v0.3.1
 
       - name: Scanner l'image avec Trivy
         continue-on-error: true
