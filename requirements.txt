@@ -12,7 +12,7 @@ python-dotenv==1.1.0
 # Dev / QA
 pytest==8.3.4
 pytest-cov==6.1.0
-pre-commit==4.2.0
+pre-commit==4.6.1
 ruff==0.15.16
 mypy==1.13.0
 coverage==7.8.0
